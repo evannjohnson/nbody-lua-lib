@@ -1,5 +1,6 @@
 -- nbody: nbody sim
 -- v0.1 @evannjohnson
+-- implementation follows https://github.com/DeadlockCode/n-body
 
 function init()
     -- initialization
@@ -14,19 +15,31 @@ function enc(n, d)
 end
 
 function redraw()
-    screen.clear()
-    screen.level(15)
-    screen.aa(0)
-    for i, body in ipairs(bodies) do
-        xpos = body.pos[1] / (max_xy * 1.2)
-        ypos = body.pos[3] / (max_xy * 1.2) / 2
-        screen.circle(xpos * 64 + 64, ypos * 32 + 32, 2)
-        screen.stroke()
-    end
-    screen.update()
 end
 
 function cleanup()
     -- deinitialization
+end
+
+Body = {}
+Body.prototype = {
+    pos = {0, 0},
+    vel = {0, 0},
+    acc = {0, 0},
+    mass = 1
+}
+
+Body.mt = {}
+Body.mt.__index = function (table, key)
+    return Body.prototype[key]
+end
+
+function Body:new (o)
+    o = o or {}
+    setmetatable(o, Body.mt)
+    o.pos = pos or o.pos
+    o.vel = vel or o.vel
+    o.mass = mass or o.mass
+    return o
 end
 
