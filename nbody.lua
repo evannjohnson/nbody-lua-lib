@@ -41,3 +41,9 @@ function Body.new (o)
     return o
 end
 
+function Body:update(dt)
+    self.pos = self.pos + self.vel * dt
+    self.vel = self.vel + self.acc * dt
+    self.acc = vec2{0, 0}
+end
+
