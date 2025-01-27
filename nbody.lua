@@ -1,6 +1,7 @@
 -- nbody: nbody sim
 -- v0.1 @evannjohnson
 -- implementation follows https://github.com/DeadlockCode/n-body
+vec2 = include("lib/vec2")
 
 function init()
     -- initialization
@@ -23,9 +24,9 @@ end
 
 Body = {}
 Body.prototype = {
-    pos = {0, 0},
-    vel = {0, 0},
-    acc = {0, 0},
+    pos = vec2{0, 0},
+    vel = vec2{0, 0},
+    acc = vec2{0, 0},
     mass = 1
 }
 
@@ -34,12 +35,9 @@ Body.mt.__index = function (table, key)
     return Body.prototype[key]
 end
 
-function Body:new (o)
+function Body.new (o)
     o = o or {}
     setmetatable(o, Body.mt)
-    o.pos = pos or o.pos
-    o.vel = vel or o.vel
-    o.mass = mass or o.mass
     return o
 end
 
