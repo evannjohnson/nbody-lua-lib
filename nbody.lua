@@ -8,7 +8,7 @@ function init()
     screen.aa(1)
     screen.line_width(1)
     sim = Simulation:new_rand(3)
-    simId = sim:start(5)
+    simId = sim:start(1000)
 end
 
 function key(n, z)
@@ -62,9 +62,10 @@ function Body:update(dt)
 end
 
 Simulation = {
-    dt = 0.000001,
-    -- dt = 0.001,
-    min = 0.0001,
+    -- dt = 0.000001,
+    dt = 0.001,
+    min = 1.1,
+    r_max = 0,
     bodies = {}
 }
 Simulation.__index = Simulation
@@ -107,6 +108,7 @@ function Simulation:new_rand(n)
 end
 
 function Simulation:update()
+    self.r_max = 0
     for i = 1, #self.bodies do
         local pos1 = self.bodies[i].pos
         local mass1 = self.bodies[i].mass
@@ -126,16 +128,20 @@ function Simulation:update()
 
     for i, body in ipairs(self.bodies) do
         body:update(self.dt)
+        local r = body.pos:length()
+        if r > self.r_max then
+            self.r_max = r
+        end
     end
 end
 
-function Simulation:start(rate)
+function Simulation:start(max_tps)
     id = clock.run(function()
         while true do
             self:update()
-            print(self.bodies[1].pos.x)
+            -- print(self.bodies[1].pos.x)
             redraw()
-            clock.sleep(1 / rate)
+            clock.sleep(1 / max_tps)
         end
     end)
     return id
