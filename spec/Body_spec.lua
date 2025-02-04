@@ -39,7 +39,6 @@ describe("body", function()
     it ("creates bodies distributed in a disc", function()
         for i = 1,100 do
             local body = Body:new_rand()
-            print(body.pos.x)
             assert.is_true(body.pos.x >= -1 and body.pos.x <= 1)
             assert.is_true(body.pos.y >= -1 and body.pos.y <= 1)
             assert.is_true(body.vel.x >= -1 and body.vel.x <= 1)
