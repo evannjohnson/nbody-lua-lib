@@ -9,10 +9,6 @@ Sim = {
     r_max = 0,
     start_time = nil,
     ticks = 0,
-    momentum_center = Vec2 { 0, 0 },
-    mass_center = Vec2 { 0, 0 },
-    ke = 0,
-    pe = 0,
     bodies = {}
 }
 Sim.__index = Sim
@@ -63,22 +59,10 @@ function Sim:new_rand(n)
 end
 
 function Sim:update()
-    self.ke = 0
-    self.pe = 0
-    self.r_max = 0
-    local wpos_sum = 0
-    local wvel_sum = 0
-    local mass_sum = 0
-
     for i = 1, #self.bodies do
         local pos1 = self.bodies[i].pos
         local mass1 = self.bodies[i].mass
-        local vel1 = self.bodies[i].vel
-        wpos_sum = wpos_sum + pos1 * mass1
-        wvel_sum = wvel_sum + vel1 * mass1
-        mass_sum = mass_sum + mass1
 
-        self.ke = self.ke + 0.5 * mass1 * (vel1[1]^2 + vel1[2]^2)
         for j = (i + 1), #self.bodies do
             local pos2 = self.bodies[j].pos
             local mass2 = self.bodies[j].mass
@@ -94,20 +78,34 @@ function Sim:update()
             self.bodies[j].acc = self.bodies[j].acc - mass1 * tmp
         end
     end
-    self.mass_center = wpos_sum / mass_sum
-    self.momentum_center = wvel_sum / mass_sum
-
 
     for i, body in ipairs(self.bodies) do
         body:update(self.dt)
-
-        -- local r = body.pos:length()
-        -- if r > self.r_max then
-        --     self.r_max = r
-        -- end
     end
     self.ticks = self.ticks + 1
     self.t = self.t + self.dt
+end
+
+function Sim:getCenterOfMass()
+    local wpos_sum = 0
+    local mass_sum = 0
+    for i = 1, #self.bodies do
+        local mass = self.bodies[i].mass
+        wpos_sum = wpos_sum + self.bodies[i].pos * mass
+        mass_sum = mass_sum + mass
+    end
+    return wpos_sum / mass_sum
+end
+
+function Sim:getCenterOfMomentum()
+    local wvel_sum = 0
+    local mass_sum = 0
+    for i = 1, #self.bodies do
+        local mass = self.bodies[i].mass
+        wvel_sum = wvel_sum + self.bodies[i].vel * mass
+        mass_sum = mass_sum + mass
+    end
+    return wvel_sum / mass_sum
 end
 
 return Sim
