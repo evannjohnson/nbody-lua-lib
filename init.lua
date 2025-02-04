@@ -3,8 +3,9 @@ local Vec2 = require(... ..'/lib/vec2')
 
 Sim = {
     -- dt = 0.000001,
-    dt = 0.001,
-    min = 1.1,
+    dt = 0.0000001,
+    t = 0,
+    min = 1.01,
     r_max = 0,
     start_time = nil,
     ticks = 0,
@@ -101,6 +102,7 @@ function Sim:update()
         -- end
     end
     self.ticks = self.ticks + 1
+    self.t = self.t + self.dt
 end
 
 return Sim
