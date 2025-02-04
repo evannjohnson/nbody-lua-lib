@@ -1,4 +1,5 @@
-local Vec2 = require((...):gsub('/body', '') .. '/lib/vec2')
+local Vec2 = require((...):gsub('body', '') .. '/lib/vec2')
+-- local Vec2 = require('/lib/vec2')
 
 Body = {
     pos = Vec2 { 0, 0 },

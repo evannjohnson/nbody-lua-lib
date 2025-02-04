@@ -1,5 +1,5 @@
-local Body = require(... ..'/body')
-local Vec2 = require(... ..'/lib/vec2')
+local Body = require((...):gsub('init', '')..'/body')
+local Vec2 = require((...):gsub('init', '')..'/lib/vec2')
 
 Sim = {
     -- dt = 0.000001,
