@@ -8,6 +8,11 @@ Body = {
     mass = 1
 }
 Body.__index = Body
+setmetatable(Body, {
+    __call = function(self, o)
+        return self:new(o)
+    end
+})
 
 function Body:new(o)
     o = o or {}

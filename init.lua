@@ -16,6 +16,11 @@ Sim = {
     bodies = {}
 }
 Sim.__index = Sim
+setmetatable(Sim, {
+    __call = function(self, o)
+        return self:new(o)
+    end
+})
 
 function Sim:new(o)
     o = o or {}
