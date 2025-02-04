@@ -1,6 +1,7 @@
-require("Body")
+local Body = require(... ..'/body')
+local Vec2 = require(... ..'/lib/vec2.lua')
 
-Simulation = {
+Sim = {
     -- dt = 0.000001,
     dt = 0.001,
     min = 1.1,
@@ -13,17 +14,17 @@ Simulation = {
     pe = 0,
     bodies = {}
 }
-Simulation.__index = Simulation
+Sim.__index = Sim
 
-function Simulation:new(o)
+function Sim:new(o)
     o = o or {}
     setmetatable(o, self)
     o.start_time = os.clock()
     return o
 end
 
-function Simulation:new_rand(n)
-    bodies = {}
+function Sim:new_rand(n)
+    local bodies = {}
     for i = 1, n do
         table.insert(bodies, Body:new_rand())
     end
@@ -52,10 +53,10 @@ function Simulation:new_rand(n)
     self.mass_center = 0
     self.momentum_center = 0
 
-    return Simulation:new { bodies = bodies }
+    return Sim:new { bodies = bodies }
 end
 
-function Simulation:update()
+function Sim:update()
     self.ke = 0
     self.pe = 0
     self.r_max = 0
@@ -102,24 +103,4 @@ function Simulation:update()
     self.ticks = self.ticks + 1
 end
 
-function Simulation:start(max_tps)
-    local id = clock.run(function()
-        while true do
-            self:update()
-            -- print(self.bodies[1].pos.x)
-            redraw()
-            clock.sleep(1 / max_tps)
-        end
-    end)
-    return id
-end
-
-function Simulation:elapsed_time()
-    return os.clock() - self.start_time
-end
-
-function Simulation:avg_tps()
-    return self.ticks / self:elapsed_time()
-end
-
-
+return Sim
