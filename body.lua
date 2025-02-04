@@ -1,5 +1,12 @@
 local Vec2 = require((...):gsub('body', '') .. '/lib/vec2')
--- local Vec2 = require('/lib/vec2')
+
+local function polar_to_cartesian(r, theta)
+    return Vec2 { math.cos(theta), math.sin(theta) } * r
+end
+
+local function rand_disc()
+    return polar_to_cartesian(math.random(), math.random() * 2 * math.pi)
+end
 
 Body = {
     pos = Vec2 { 0, 0 },
@@ -20,9 +27,10 @@ function Body:new(o)
     return o
 end
 
-local function rand_disc()
-    local theta = math.random() * 2 * math.pi
-    return Vec2 { math.cos(theta), math.sin(theta) } * math.random()
+function Body:new_polar(r, theta, o)
+    o = o or {}
+    o.pos = polar_to_cartesian(r, theta)
+    return Body:new(o)
 end
 
 function Body:new_rand()

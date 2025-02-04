@@ -36,6 +36,12 @@ describe("body", function()
         end
     end)
 
+    it("creates bodies from polar coordinates", function()
+        local body = Body:new_polar(1,4.806)
+        assert.are.near(0.09347, body.pos.x, 1e-4)
+        assert.are.near(-0.9956, body.pos.y, 1e-4)
+    end)
+
     it ("creates bodies distributed in a disc", function()
         for i = 1,100 do
             local body = Body:new_rand()
