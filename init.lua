@@ -1,5 +1,5 @@
 local Body = require(... ..'/body')
-local Vec2 = require(... ..'/lib/vec2.lua')
+local Vec2 = require(... ..'/lib/vec2')
 
 Sim = {
     -- dt = 0.000001,
@@ -25,7 +25,7 @@ end
 
 function Sim:new_rand(n)
     local bodies = {}
-    for i = 1, n do
+    for i = 1,n do
         table.insert(bodies, Body:new_rand())
     end
 
