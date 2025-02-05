@@ -1,6 +1,44 @@
-local Body = require("body")
-local Sim = require("init")
-local Vec2 = require("lib/vec2")
+local Body   = require("body")
+local Sim    = require("init")
+local Vec2   = require("lib/vec2")
+local assert = require("luassert")
+local say    = require("say")
+
+say:set_namespace("en")
+
+local function are_near(state, arguments)
+    arguments.nofmt = arguments.nofmt or {}
+    arguments.nofmt[3] = true
+
+    local expected = arguments[1]
+    local actual = arguments[2]
+    local tolerance = arguments[3]
+
+    local near = true
+
+    for i=1,2 do
+        near = near and (actual[i] >= expected[i] - tolerance and actual[i] <= expected[i] + tolerance)
+    end
+
+    return near
+end
+
+say:set("assertion.are_near.positive",
+    [[Expected values to be near.
+Passed in:
+%s
+Expected +/- %s:
+%s]])
+
+say:set("assertion.are_near.negative",
+    [[Expected values not to be near.
+Passed in:
+%s
+Expected +/- %s:
+not %s]])
+
+assert:register("assertion", "are_near", are_near, "assertion.are_near.positive",
+    "assertion.are_near.negative")
 
 describe("sim calculates center of momentum", function()
     it("with 1 body at origin", function()
