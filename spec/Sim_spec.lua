@@ -16,7 +16,7 @@ local function are_near(state, arguments)
 
     local near = true
 
-    for i=1,2 do
+    for i = 1, 2 do
         near = near and (actual[i] >= expected[i] - tolerance and actual[i] <= expected[i] + tolerance)
     end
 
@@ -71,11 +71,23 @@ describe("sim calculates center of momentum", function()
 
     it("with 3 unmoving bodies equidistant from the origin", function()
         local sim = Sim:new()
-        for i=1,3 do
+        for i = 1, 3 do
             table.insert(sim.bodies, Body:new_polar(1, i * 2 * math.pi / 3))
         end
 
         assert.are_same({ 0, 0 }, sim:getCenterOfMomentum())
+    end)
+
+    it("with 1 moving body", function()
+        local sim = Sim {
+            bodies = {
+                Body {
+                    vel = Vec2 { 1, 1 }
+                }
+            }
+        }
+
+        assert.are_same({ 1, 1 }, sim:getCenterOfMomentum())
     end)
 end)
 
@@ -110,7 +122,7 @@ describe("sim calculates center of mass", function()
 
     it("with 3 bodies equidistant from the origin", function()
         local sim = Sim:new()
-        for i=1,3 do
+        for i = 1, 3 do
             table.insert(sim.bodies, Body:new_polar(1, i * 2 * math.pi / 3))
         end
 

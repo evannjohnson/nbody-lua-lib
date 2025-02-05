@@ -5,9 +5,11 @@ Sim = {
     -- dt = 0.000001,
     dt = 0.01,
     t = 0,
-    softening = 1.1,
+    softening = .01,
     r_max = 0,
     integrator = "leapfrog",
+    gravEquation = "exponent",
+    gravExponent = 2,
     start_time = nil,
     ticks = 0,
     bodies = {}
@@ -59,19 +61,32 @@ function Sim:new_rand(n)
     return Sim:new { bodies = bodies }
 end
 
+function Sim:new_circular(n)
+    local bodies = {}
+    for i = 1, n do
+        local body = Body:new_polar(1, math.pi * 2 * i / n)
+        body.vel = body.pos:clone()
+        body.vel:rotate(math.pi / 2)
+        body.vel:setLength(.75)
+        table.insert(bodies, body)
+    end
+    return Sim:new { bodies = bodies }
+end
+
 function Sim:new_from_state(state)
     return Sim:new(self.startingStates[state])
 end
 
 function Sim:update()
-    self.integrators[self.integrator](self.bodies, self.dt, self.softening)
+    self.integrators[self.integrator](self.bodies, self.dt, self.softening, self.gravityEquations[self.gravEquation],
+        self.gravExponent)
     self.ticks = self.ticks + 1
     self.t = self.t + self.dt
 end
 
-local function updateAcc(bodies, softening)
+local function updateAcc(bodies, softening, gravEq, gravExp)
     for i = 1, #bodies do
-        bodies[i].acc = Vec2{0,0}
+        bodies[i].acc = Vec2 { 0, 0 }
     end
 
     for i = 1, #bodies - 1 do
@@ -84,47 +99,53 @@ local function updateAcc(bodies, softening)
 
             local r = pos2 - pos1
             local dist = r:length()
-            local tmp = r / (math.max(softening, dist * dist) * dist)
+            -- local force = r / (math.max(softening, dist * dist) * dist)
+            local force = gravEq(r, dist, softening, gravExp)
 
-            bodies[i].acc = bodies[i].acc + mass2 * tmp
-            bodies[j].acc = bodies[j].acc - mass1 * tmp
+            bodies[i].acc = bodies[i].acc + mass2 * force
+            bodies[j].acc = bodies[j].acc - mass1 * force
         end
     end
 end
 
+Sim.gravityEquations = {
+    exponent = function(r, dist, softening, exp)
+        return r / (math.max(softening, dist ^ exp))
+    end
+}
 
 Sim.integrators = {
-    eulerSimple = function (bodies, dt, softening)
-        updateAcc(bodies, softening)
+    eulerSimple = function(bodies, dt, softening, gravEq, gravExp)
+        updateAcc(bodies, softening, gravEq, gravExp)
 
         for i, body in ipairs(bodies) do
             body:update(dt)
         end
     end,
-    eulerImplicit = function (bodies, dt, softening)
-        updateAcc(bodies, softening)
+    eulerSymplectic = function(bodies, dt, softening, gravEq, gravExp)
+        updateAcc(bodies, softening, gravEq, gravExp)
 
         for i, body in ipairs(bodies) do
-            body.pos = body.pos + body.vel * dt
             body.vel = body.vel + body.acc * dt
+            body.pos = body.pos + body.vel * dt
         end
     end,
-    leapfrog = function (bodies, dt, softening)
-        for i,body in ipairs(bodies) do
-            body.vel = body.vel + body.acc * dt/2.0
+    leapfrog = function(bodies, dt, softening, gravEq, gravExp)
+        for i, body in ipairs(bodies) do
+            body.vel = body.vel + body.acc * dt / 2.0
             body.pos = body.pos + body.vel * dt
         end
 
-        updateAcc(bodies, softening)
+        updateAcc(bodies, softening, gravEq, gravExp)
 
-        for i,body in ipairs(bodies) do
-            body.vel = body.vel + body.acc * dt/2.0
+        for i, body in ipairs(bodies) do
+            body.vel = body.vel + body.acc * dt / 2.0
         end
     end
 }
 
 function Sim:getCenterOfMass()
-    local wpos_sum = 0
+    local wpos_sum = Vec2 { 0, 0 }
     local mass_sum = 0
     for i = 1, #self.bodies do
         local mass = self.bodies[i].mass
@@ -135,7 +156,7 @@ function Sim:getCenterOfMass()
 end
 
 function Sim:getCenterOfMomentum()
-    local wvel_sum = 0
+    local wvel_sum = Vec2 { 0, 0 }
     local mass_sum = 0
     for i = 1, #self.bodies do
         local mass = self.bodies[i].mass
@@ -145,10 +166,19 @@ function Sim:getCenterOfMomentum()
     return wvel_sum / mass_sum
 end
 
+function Sim:getMaxDistFromOrigin()
+    local max = 0
+    for i, body in ipairs(self.bodies) do
+        local dist = body.pos:length()
+        max = math.max(max, dist)
+    end
+    return max
+end
+
 function Sim:getKineticEnergy()
     local ke = 0
     for i = 1, #self.bodies do
-        ke = ke + self.bodies[i].mass * self.bodies[i].vel:length()^2 / 2
+        ke = ke + self.bodies[i].mass * self.bodies[i].vel:length() ^ 2 / 2
     end
     return ke
 end
@@ -166,14 +196,33 @@ end
 Sim.startingStates = {
     simpleOrbit = {
         bodies = {
-            Body{
-                pos = Vec2{0,0},
-                mass = 10000
+            Body {
+                pos = Vec2 { 0, 0 },
+                mass = 100
             },
-            Body{
-                pos = Vec2{0,1},
-                vel = Vec2{100,0}
+            Body {
+                pos = Vec2 { 0, 1 },
+                vel = Vec2 { 10, 0 }
             }
+        }
+    },
+    twins = {
+        bodies = {
+            Body {
+                pos = Vec2 { 0, 1 },
+                vel = Vec2 { .5, 0 }
+            },
+            Body {
+                pos = Vec2 { 0, -1 },
+                vel = Vec2 { -.5, 0 }
+            }
+        }
+    },
+    triplets = {
+        bodies = {
+            Body:new_polar(1, math.pi * 2 / 3),
+            Body:new_polar(1, math.pi * 4 / 3),
+            Body:new_polar(1, math.pi * 2)
         }
     }
 }
