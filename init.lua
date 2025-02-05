@@ -1,5 +1,5 @@
-local Body = require((...):gsub('init', '')..'/body')
-local Vec2 = require((...):gsub('init', '')..'/lib/vec2')
+local Body = require((...):gsub('init', '') .. '/body')
+local Vec2 = require((...):gsub('init', '') .. '/lib/vec2')
 
 Sim = {
     -- dt = 0.000001,
@@ -27,7 +27,7 @@ end
 
 function Sim:new_rand(n)
     local bodies = {}
-    for i = 1,n do
+    for i = 1, n do
         table.insert(bodies, Body:new_rand())
     end
 
@@ -69,7 +69,7 @@ function Sim:update()
 
             local r = pos2 - pos1
             local dist = r:length()
-            local tmp = r / (math.max(self.min, dist*dist) * dist)
+            local tmp = r / (math.max(self.min, dist * dist) * dist)
             if dist > 0 then
                 self.pe = self.pe - mass1 * mass2 / dist
             end
@@ -106,6 +106,24 @@ function Sim:getCenterOfMomentum()
         mass_sum = mass_sum + mass
     end
     return wvel_sum / mass_sum
+end
+
+function Sim:getKineticEnergy()
+    local ke = 0
+    for i = 1, #self.bodies do
+        ke = ke + self.bodies[i].mass / self.bodies[i].vel:length()^2
+    end
+    return ke
+end
+
+function Sim:getPotentialEnergy()
+    local pe = 0
+    for i = 1, #self.bodies - 1 do
+        for j = i + 1, #self.bodies do
+            pe = pe - self.bodies[i].mass * self.bodies[j].mass / (self.bodies[j] - self.bodies[i]):length()
+        end
+    end
+    return pe
 end
 
 return Sim
