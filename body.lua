@@ -43,7 +43,6 @@ end
 function Body:update(dt)
     self.pos = self.pos + self.vel * dt
     self.vel = self.vel + self.acc * dt
-    self.acc = Vec2 { 0, 0 }
 end
 
 return Body
