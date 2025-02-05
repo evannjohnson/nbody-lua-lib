@@ -5,8 +5,9 @@ Sim = {
     -- dt = 0.000001,
     dt = 0.0000001,
     t = 0,
-    min = 1.01,
+    softening = 1.01,
     r_max = 0,
+    integrator = "eulerSimple",
     start_time = nil,
     ticks = 0,
     bodies = {}
@@ -35,7 +36,7 @@ function Sim:new_rand(n)
     local wvel_sum = 0
     local mass_sum = 0
     local max_dist = 0
-    for i, body in ipairs(bodies) do
+    for i, body in pairs(bodies) do
         wpos_sum = wpos_sum + body.pos * body.mass
         wvel_sum = wvel_sum + body.vel * body.mass
         mass_sum = mass_sum + body.mass
@@ -59,32 +60,35 @@ function Sim:new_rand(n)
 end
 
 function Sim:update()
-    for i = 1, #self.bodies do
-        local pos1 = self.bodies[i].pos
-        local mass1 = self.bodies[i].mass
-
-        for j = (i + 1), #self.bodies do
-            local pos2 = self.bodies[j].pos
-            local mass2 = self.bodies[j].mass
-
-            local r = pos2 - pos1
-            local dist = r:length()
-            local tmp = r / (math.max(self.min, dist * dist) * dist)
-            if dist > 0 then
-                self.pe = self.pe - mass1 * mass2 / dist
-            end
-
-            self.bodies[i].acc = self.bodies[i].acc + mass2 * tmp
-            self.bodies[j].acc = self.bodies[j].acc - mass1 * tmp
-        end
-    end
-
-    for i, body in ipairs(self.bodies) do
-        body:update(self.dt)
-    end
+    self.integrators[self.integrator](self.bodies, self.dt, self.softening)
     self.ticks = self.ticks + 1
     self.t = self.t + self.dt
 end
+
+Sim.integrators = {
+    eulerSimple = function (bodies, dt, softening)
+        for i = 1, #bodies - 1 do
+            local pos1 = bodies[i].pos
+            local mass1 = bodies[i].mass
+
+            for j = (i + 1), #bodies do
+                local pos2 = bodies[j].pos
+                local mass2 = bodies[j].mass
+
+                local r = pos2 - pos1
+                local dist = r:length()
+                local tmp = r / (math.max(softening, dist * dist) * dist)
+
+                bodies[i].acc = bodies[i].acc + mass2 * tmp
+                bodies[j].acc = bodies[j].acc - mass1 * tmp
+            end
+        end
+
+        for i, body in ipairs(bodies) do
+            body:update(dt)
+        end
+    end
+}
 
 function Sim:getCenterOfMass()
     local wpos_sum = 0
