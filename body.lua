@@ -1,4 +1,4 @@
-local Vec2 = require((...):gsub('body', '') .. '/lib/vec2')
+local Vec2 = require((...):gsub('body$', '') .. 'lib/vec2')
 
 local function polar_to_cartesian(r, theta)
     return Vec2 { math.cos(theta), math.sin(theta) } * r
