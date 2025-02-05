@@ -68,4 +68,52 @@ describe("sim calculates center of momentum", function()
         }
         assert.are_same({ 0, 0 }, sim:getCenterOfMomentum())
     end)
+
+    it("with 3 unmoving bodies equidistant from the origin", function()
+        local sim = Sim:new()
+        for i=1,3 do
+            table.insert(sim.bodies, Body:new_polar(1, i * 2 * math.pi / 3))
+        end
+
+        assert.are_same({ 0, 0 }, sim:getCenterOfMomentum())
+    end)
+end)
+
+describe("sim calculates center of mass", function()
+    it("with 1 body at origin", function()
+        local sim = Sim {
+            bodies = {
+                Body {
+                    pos = Vec2 { 0, 0 },
+                    vel = Vec2 { 0, 0 }
+                }
+            }
+        }
+        assert.are_same({ 0, 0 }, sim:getCenterOfMass())
+    end)
+
+    it("with 2 bodies equidistant from the origin", function()
+        local sim = Sim {
+            bodies = {
+                Body {
+                    pos = Vec2 { 1, 1 },
+                    vel = Vec2 { 0, 0 }
+                },
+                Body {
+                    pos = Vec2 { -1, -1 },
+                    vel = Vec2 { 0, 0 }
+                }
+            }
+        }
+        assert.are_same({ 0, 0 }, sim:getCenterOfMass())
+    end)
+
+    it("with 3 bodies equidistant from the origin", function()
+        local sim = Sim:new()
+        for i=1,3 do
+            table.insert(sim.bodies, Body:new_polar(1, i * 2 * math.pi / 3))
+        end
+
+        assert.are_near({ 0, 0 }, sim:getCenterOfMass(), 1e-4)
+    end)
 end)
