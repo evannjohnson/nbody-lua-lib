@@ -12,6 +12,7 @@ Sim = {
     gravExponent = 2,
     start_time = nil,
     ticks = 0,
+    dampening = 0,
     bodies = {}
 }
 Sim.__index = Sim
@@ -79,7 +80,7 @@ end
 
 function Sim:update()
     self.integrators[self.integrator](self.bodies, self.dt, self.softening, self.gravityEquations[self.gravEquation],
-        self.gravExponent)
+        self.gravExponent, self.dampening)
     self.ticks = self.ticks + 1
     self.t = self.t + self.dt
 end
@@ -122,17 +123,25 @@ Sim.integrators = {
             body:update(dt)
         end
     end,
-    eulerSymplectic = function(bodies, dt, softening, gravEq, gravExp)
+    eulerSymplectic = function(bodies, dt, softening, gravEq, gravExp, dampening)
         updateAcc(bodies, softening, gravEq, gravExp)
 
         for i, body in ipairs(bodies) do
             body.vel = body.vel + body.acc * dt
+            if dampening ~= 0 then
+                local len = body.vel:length() * (1 - dampening)
+                body.vel = body.vel:normalize() * len
+            end
             body.pos = body.pos + body.vel * dt
         end
     end,
-    leapfrog = function(bodies, dt, softening, gravEq, gravExp)
+    leapfrog = function(bodies, dt, softening, gravEq, gravExp, dampening)
         for i, body in ipairs(bodies) do
             body.vel = body.vel + body.acc * dt / 2.0
+            if dampening ~= 0 then
+                local len = body.vel:length() * (1 - dampening)
+                body.vel = body.vel:normalize() * len
+            end
             body.pos = body.pos + body.vel * dt
         end
 
@@ -140,6 +149,10 @@ Sim.integrators = {
 
         for i, body in ipairs(bodies) do
             body.vel = body.vel + body.acc * dt / 2.0
+            if dampening ~= 0 then
+                local len = body.vel:length() * (1- dampening)
+                body.vel = body.vel:normalize() * len
+            end
         end
     end
 }
@@ -187,10 +200,17 @@ function Sim:getPotentialEnergy()
     local pe = 0
     for i = 1, #self.bodies - 1 do
         for j = i + 1, #self.bodies do
-            pe = pe - self.bodies[i].mass * self.bodies[j].mass / (self.bodies[j].pos - self.bodies[i].pos):length()
+            local r = self.bodies[j].pos - self.bodies[i].pos
+            local dist = r:length()
+            local denominator = math.max(self.softening, dist ^ (self.gravExponent - 1))
+            pe = pe - self.bodies[i].mass * self.bodies[j].mass / denominator
         end
     end
     return pe
+end
+
+function Sim:getTotalEnergy()
+    return self:getKineticEnergy() + self:getPotentialEnergy()
 end
 
 Sim.startingStates = {
